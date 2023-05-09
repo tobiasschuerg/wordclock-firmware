@@ -1,35 +1,17 @@
+#include "WordClockConfig.h"
+#include "WordClockSettings.h"
 //#include <Adafruit_GFX.h>
-
 #include <EEPROM.h>
 #include <SoftwareSerial.h>
 #include <FastLED.h>
-#include <DS3232RTC.h>    //http://github.com/JChristensen/DS3232RTC
+#include <DS3232RTC.h>  // needs 1.x    //http://github.com/JChristensen/DS3232RTC
 #include <TimeLib.h>         //https://github.com/PaulStoffregen/Time
 // #include <Timezone.h>     //https://github.com/JChristensen/Timezone
 #include <Wire.h>         //http://arduino.cc/en/Reference/Wire (included with Arduino IDE)
-
 //#include <glcdfont.c>
 
 SoftwareSerial btSerial(8, 9);
 CRGB leds[10 * 11 + 4];
-
-const byte ES[] =      {0, 0, 2};
-const byte IST[] =     {0, 3, 3};
-const byte FUENF[] =   {0, 7, 4};
-const byte ZEHN[] =    {1, 0, 4};
-const byte ZWANZIG[] = {1, 4, 7};
-const byte VIERTEL[] = {2, 4, 7};
-const byte NACH[] =    {3, 2, 4};
-const byte VOR[] =     {3, 6, 3};
-const byte HALB[] =    {4, 0, 4};
-const byte UHR[] =     {9, 8, 3};
-
-const byte HOUR[][3] = {
-  //EIN       EINS       ZWEI       DREI       VIER       FUENF
-  {5, 2, 3}, {5, 2, 4}, {5, 0, 4}, {6, 1, 4}, {7, 7, 4}, {6, 7, 4},
-  //SECHS     SIEBEN     ACHT       NEUN       ZEHN       ELF        ZWOELF
-  {9, 1, 5}, {5, 5, 6}, {8, 1, 4}, {7, 3, 4}, {8, 5, 4}, {7, 0, 3}, {4, 5, 5}
-};
 
 /**
    Contains all added words since  the last call of generateWords().
@@ -49,27 +31,7 @@ byte old_words_length = 0;
 const byte *const_words[6];
 byte const_words_length = 0;
 
-/**
-   Fore- and background color for the letters.
-*/
-CRGB foreground = CRGB(0, 100, 100);
-CRGB background = CRGB(5, 5, 5); //CRGB(0, 255, 0) CRGB(10, 50, 5)
 
-/**
-   Stores the effect number.
-*/
-byte effect = 3;
-
-/**
-   Hardware version.
-*/
-
-byte hwVersion = 2;
-
-/**
-   Should "Es ist" be showed?
-*/
-bool showEsIst = true;
 
 //TimeChangeRule aEDT = {"AEDT", First, Sun, Oct, 2, 660};    //UTC + 11 hours
 //TimeChangeRule aEST = {"AEST", First, Sun, Apr, 3, 600};    //UTC + 10 hours
@@ -374,7 +336,7 @@ void handleBluetooth() {
   bt++;
   if (bt % 20 == 0) {
     Serial.print("\n");
-  }
+  } 
   Serial.print("BT ");
   while (btSerial.available() >= 4) {
     byte type = btSerial.read();
@@ -594,56 +556,3 @@ void setLeds(int y, int x, CRGB color, int len, bool add) {
     }
   }
 }
-
-/**
-   Stores settings to EEPROM.
-*/
-void storeSettings() {
-  EEPROM.write(0, foreground.r);
-  EEPROM.write(1, foreground.g);
-  EEPROM.write(2, foreground.b);
-  EEPROM.write(3, background.r);
-  EEPROM.write(4, background.g);
-  EEPROM.write(5, background.b);
-  EEPROM.write(6, effect);
-  EEPROM.write(7, showEsIst);
-  EEPROM.write(8, hwVersion);
-  // EEPROM.write(9, timezone);
-}
-
-/**
-   Loads settings from EEPROM.
-*/
-void loadSettings() {
-  foreground.r =  EEPROM.read(0);
-  foreground.g = EEPROM.read(1);
-  foreground.b = EEPROM.read(2);
-  background.r = EEPROM.read(3);
-  background.g = EEPROM.read(4);
-  background.b = EEPROM.read(5);
-  effect =       EEPROM.read(6);
-  showEsIst =    EEPROM.read(7);
-  hwVersion =    EEPROM.read(8);
-  // timezone =     EEPROM.read(9);
-}
-
-/**
-   Shows a 5x7 char at a specific position.
-
-  void showChar(byte x, byte y, unsigned char c, CRGB color) {
-  for (int8_t i=0; i<6; i++ ) {
-    uint8_t line;
-    if (i == 5)
-      line = 0x0;
-    else
-      line = pgm_read_byte(font+(c*5)+i);
-    for (int8_t j = 0; j<8; j++) {
-      if (line & 0x1) {
-          setLeds(y+j, x+i, color, 1, false);
-      }
-      line >>= 1;
-    }
-  }
-  }
-*/
-
