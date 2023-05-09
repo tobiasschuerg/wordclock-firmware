@@ -5,9 +5,9 @@
 #include <SoftwareSerial.h>
 #include <FastLED.h>
 #include <DS3232RTC.h>  // needs 1.x    //http://github.com/JChristensen/DS3232RTC
-#include <TimeLib.h>         //https://github.com/PaulStoffregen/Time
+#include <TimeLib.h>    //https://github.com/PaulStoffregen/Time
 // #include <Timezone.h>     //https://github.com/JChristensen/Timezone
-#include <Wire.h>         //http://arduino.cc/en/Reference/Wire (included with Arduino IDE)
+#include <Wire.h>  //http://arduino.cc/en/Reference/Wire (included with Arduino IDE)
 //#include <glcdfont.c>
 
 SoftwareSerial btSerial(8, 9);
@@ -31,77 +31,52 @@ byte old_words_length = 0;
 const byte *const_words[6];
 byte const_words_length = 0;
 
-
-
-//TimeChangeRule aEDT = {"AEDT", First, Sun, Oct, 2, 660};    //UTC + 11 hours
-//TimeChangeRule aEST = {"AEST", First, Sun, Apr, 3, 600};    //UTC + 10 hours
-// TimeChangeRule CEST = {"CEST", Last, Sun, Mar, 2, 120};     //Central European Summer Time
-// TimeChangeRule CET = {"CET ", Last, Sun, Oct, 30, 60};       //Central European Standard Time
-//TimeChangeRule BST = {"BST", Last, Sun, Mar, 1, 60};        //British Summer Time
-//TimeChangeRule GMT = {"GMT", Last, Sun, Oct, 2, 0};         //Standard Time
-//TimeChangeRule usEDT = {"EDT", Second, Sun, Mar, 2, -240};  //Eastern Daylight Time = UTC - 4 hours
-//TimeChangeRule usEST = {"EST", First, Sun, Nov, 2, -300};   //Eastern Standard Time = UTC - 5 hours
-//TimeChangeRule usCDT = {"CDT", Second, dowSunday, Mar, 2, -300};
-//TimeChangeRule usCST = {"CST", First, dowSunday, Nov, 2, -360};
-//TimeChangeRule usMDT = {"MDT", Second, dowSunday, Mar, 2, -360};
-//TimeChangeRule usMST = {"MST", First, dowSunday, Nov, 2, -420};
-//TimeChangeRule usPDT = {"PDT", Second, dowSunday, Mar, 2, -420};
-//TimeChangeRule usPST = {"PST", First, dowSunday, Nov, 2, -480};
-
-//Timezone ausET(aEDT, aEST); //Australia Eastern Time Zone (Sydney, Melbourne)
-// Timezone CE(CEST, CET); //Central European Time (Frankfurt, Paris)
-//Timezone UK(BST, GMT); //United Kingdom (London, Belfast)
-//Timezone usET(usEDT, usEST); //US Eastern Time Zone (New York, Detroit)
-//Timezone usCT(usCDT, usCST); //US Central Time Zone (Chicago, Houston)
-//Timezone usMT(usMDT, usMST); //US Mountain Time Zone (Denver, Salt Lake City)
-//Timezone usAZ(usMST, usMST); //Arizona is US Mountain Time Zone but does not use DST
-//Timezone usPT(usPDT, usPST); //US Pacific Time Zone (Las Vegas, Los Angeles)
-
-// Timezone timezones[] = {CE};
-
-// byte timezone = 0;
 int delayMillis = 550;
 time_t lastBt;
+
+void printDateTime(time_t t) {
+  char buffer[20];
+  sprintf(buffer, "%04d-%02d-%02d %02d:%02d:%02d",
+          year(t), month(t), day(t), hour(t), minute(t), second(t));
+  Serial.println(buffer);
+}
 
 void setup() {
   Serial.begin(9600);
 
-  //setup real time clock
+  // sync arduino with the real time clock
   setSyncProvider(RTC.get);
-  if (timeStatus() != timeSet)
+  if (timeStatus() != timeSet) {
     Serial.println("Unable to sync with the RTC");
-  else
+  } else {
     Serial.println("RTC has set the system time");
+    printDateTime(now());  // print current time
+  }
 
   //setup FastLED
-  delay( 1000 ); // power-up safety delay
+  delay(1000);  // power-up safety delay
   FastLED.addLeds<NEOPIXEL, 7>(leds, 10 * 11 + 4);
-  FastLED.setBrightness(200);
-
+  FastLED.setBrightness(brightness);
+  // show all red
   for (int i = 0; i < 10 * 11 + 4; i++) {
     leds[i] = CRGB::Red;
   }
   FastLED.show();
-  delay(100);
-
-  btSerial.begin(9600);
-
-  /*showChar(0, 2, 'A', CRGB(255, 255, 255));
-    showChar(6, 2, 'O', CRGB(255, 255, 255));
-
-    FastLED.show();
-    delay(1500); */
-  delayMillis = 100;
+  delay(250);
 
   loadSettings();
-  //storeSettings();
 
+  // start bluetooth
+  btSerial.begin(9600);
   lastBt = now();
+
+  delayMillis = 100;
   Serial.println("initialized");
 }
 
-void loop()
-{
+void loop() {
+  handleNightMode();
+
   generateWords();
 
   showCorners(foreground, background);
@@ -122,10 +97,32 @@ void loop()
   FastLED.show();
   delay(delayMillis);
 
-  if (now() - lastBt > 0) { // only check bluetooth at most once per second
-    // Serial.println(now() - lastBt);
+  if (now() - lastBt > 0) {  // only check bluetooth at most once per second
     handleBluetooth();
     lastBt = now();
+  }
+}
+
+/**
+ * During night mode (configurable in the config), the light is dimmed and the background turned off.
+ */
+void handleNightMode() {
+  if (isNightModeEnabled) {
+    time_t t = RTC.get();
+    int h = hour(t);
+    if (!isNightModeActive && h >= nightModeStartHour) {
+      background = CRGB(0, 0, 0);                  // turn off background
+      FastLED.setBrightness(nightModeBrightness);  // dim the time
+      effect = 0;                                  // no effect
+      // TODO: turn off bluetooth? increase delay?
+      isNightModeActive = true;
+      Serial.println("Night mode enabled");
+    } else if (isNightModeActive && h >= nightModeEndtHour && h < nightModeStartHour) {
+      FastLED.setBrightness(brightness);
+      loadSettings();
+      isNightModeActive = false;
+      Serial.println("Night mode disabled");
+    }
   }
 }
 
@@ -165,7 +162,7 @@ void generateWords() {
 void showCorners(CRGB on, CRGB off) {
   byte num = minute() % 5;
   for (byte i = 0; i < 4; i++) {
-    leds[10 * 11 + i] = (i < num) ?  on : off;
+    leds[10 * 11 + i] = (i < num) ? on : off;
   }
 }
 
@@ -225,15 +222,14 @@ void showRollDown(CRGB on, CRGB off) {
 /**
    Shows the "matrix effect" in background color and the time in foreground color.
 */
-byte matrix_worms[11] = { -5, -10, -3, -13, -1, 0, -1, -5, -6, -11, -4};
+byte matrix_worms[11] = { -5, -10, -3, -13, -1, 0, -1, -5, -6, -11, -4 };
 void showMatrix(CRGB on, CRGB off) {
   _fadeall();
 
   for (byte i = 0; i < 11; i++) {
     if (matrix_worms[i] < 10) {
       setLeds(matrix_worms[i], i, off, 1, false);
-    }
-    else if (matrix_worms[i] == 10) {
+    } else if (matrix_worms[i] == 10) {
       matrix_worms[i] = -random8(14);
     }
     matrix_worms[i]++;
@@ -274,8 +270,7 @@ void scanner(CRGB on, CRGB off) {
     Serial.println(delayMillis);
     t = now();
   }
-  setLeds(row, column , on, 1, false);
-
+  setLeds(row, column, on, 1, false);
 }
 
 /**
@@ -331,20 +326,15 @@ void showParty(CRGB on, CRGB off) {
 /**
    Parses and executes the bluetooh commands.
 */
-int bt = 0;
 void handleBluetooth() {
-  bt++;
-  if (bt % 20 == 0) {
-    Serial.print("\n");
-  } 
-  Serial.print("BT ");
   while (btSerial.available() >= 4) {
     byte type = btSerial.read();
     Serial.print("\n~~BT: ");
-    Serial.print((char) type);
+    Serial.print((char)type);
 
     switch (type) {
-      case 'F': { //foreground color
+      case 'F':
+        {  //foreground color
           byte red = btSerial.read();
           byte green = btSerial.read();
           byte blue = btSerial.read();
@@ -352,7 +342,8 @@ void handleBluetooth() {
           Serial.println(foreground);
           break;
         }
-      case 'B': { //background color
+      case 'B':
+        {  //background color
           byte red = btSerial.read();
           byte green = btSerial.read();
           byte blue = btSerial.read();
@@ -364,7 +355,8 @@ void handleBluetooth() {
         showEsIst = (btSerial.read() == 1);
         btSerial.read();
         break;
-      case 'T': { //time
+      case 'T':
+        {  //time
           byte h = btSerial.read();
           byte m = btSerial.read();
           byte s = btSerial.read();
@@ -380,7 +372,8 @@ void handleBluetooth() {
           RTC.set(now());
           break;
         }
-      case 'D': { //date
+      case 'D':
+        {  //date
           byte d = btSerial.read();
           byte m = btSerial.read();
           byte y = btSerial.read();
@@ -399,14 +392,16 @@ void handleBluetooth() {
       //          btSerial.read(); btSerial.read();
       //          break;
       //        }
-      case 'S': {
+      case 'S':
+        {
           btSerial.read();
           btSerial.read();
           btSerial.read();
           storeSettings();
           break;
         }
-      case 'G': { //get
+      case 'G':
+        {  //get
           byte toGet = btSerial.read();
           Serial.println((char)toGet);
           switch (toGet) {
@@ -446,12 +441,14 @@ void handleBluetooth() {
               //              btSerial.write('Z'); btSerial.write('Z');
               //              break;
           }
-          btSerial.read(); btSerial.read();
+          btSerial.read();
+          btSerial.read();
           break;
         }
-      default: {
+      default:
+        {
           Serial.print("Unknown command ");
-          Serial.println((char) type);
+          Serial.println((char)type);
           break;
         }
     }
@@ -549,8 +546,7 @@ void setLeds(int y, int x, CRGB color, int len, bool add) {
     for (int i = 0; i < len; i++) {
       leds[start_led + i * dir] += color;
     }
-  }
-  else {
+  } else {
     for (int i = 0; i < len; i++) {
       leds[start_led + i * dir] = color;
     }

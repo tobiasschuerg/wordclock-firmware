@@ -21,12 +21,24 @@ extern CRGB background;
 
 extern byte effect;
 /**
-   Hardware version.
+  Hardware version.
 */
 extern byte hwVersion;
 /**
-   Should "Es ist" be showed?
+  Should "Es ist" be showed?
 */
 extern bool showEsIst;
+
+extern int brightness;
+
+/**
+  Night mode can be confiureg so that the clock is less bright and consumes less power.
+  */
+extern bool isNightModeEnabled;
+extern bool isNightModeActive;
+extern int nightModeStartHour;
+extern int nightModeEndtHour;
+extern int nightModeBrightness;
+
 
 #endif // WORD_CLOCK_CONFIG_H
