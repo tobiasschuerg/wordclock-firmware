@@ -9,6 +9,9 @@ extern byte old_words_length;
 extern const byte *const_words[];
 extern byte const_words_length;
 
+/**
+   Transition: fades new words in and old words out.
+*/
 void transitionFade(CRGB on, CRGB off) {
     for (int e = 1; e <= 256 / 8; e++) {
         int i = e * 8 - 1;
@@ -21,6 +24,9 @@ void transitionFade(CRGB on, CRGB off) {
     }
 }
 
+/**
+   Transition: removes old words and inserts new words in a typewriter style.
+*/
 void transitionTypewriter(CRGB on, CRGB off) {
     byte max_old_word = 0;
     byte max_new_word = 0;
@@ -48,6 +54,9 @@ void transitionTypewriter(CRGB on, CRGB off) {
     }
 }
 
+/**
+   Transition: rolls characters out and in to change display.
+*/
 void transitionRollDown(CRGB on, CRGB off) {
     for (int e = 1; e <= 10; e++) {
         fillLeds(off);
@@ -66,6 +75,9 @@ void transitionRollDown(CRGB on, CRGB off) {
     }
 }
 
+/**
+   Transition: circular ripple reveals new words from center outward.
+*/
 void transitionWave(CRGB on, CRGB off) {
     for (int radius = 0; radius <= 12; radius++) {
         fillLeds(off);
@@ -101,6 +113,9 @@ void transitionWave(CRGB on, CRGB off) {
     }
 }
 
+/**
+   Transition: old words slide out left, new words slide in from right.
+*/
 void transitionSlide(CRGB on, CRGB off) {
     for (int e = 1; e <= 11; e++) {
         fillLeds(off);
@@ -118,6 +133,9 @@ void transitionSlide(CRGB on, CRGB off) {
     }
 }
 
+/**
+   Transition: words briefly flash brighter when they change, then settle.
+*/
 void transitionPulse(CRGB on, CRGB off) {
     fillLeds(off);
     showAllWords(on, const_words, const_words_length);

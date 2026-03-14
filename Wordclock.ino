@@ -15,12 +15,21 @@ DS3232RTC myRTC;
 SoftwareSerial btSerial(8, 9);
 CRGB leds[10 * 11 + 4];
 
+/**
+   Contains all added words since the last call of generateWords().
+*/
 const byte *new_words[6];
 byte new_words_length = 0;
 
+/**
+   Contains all removed words since the last call of generateWords().
+*/
 const byte *old_words[6];
 byte old_words_length = 0;
 
+/**
+   Contains all unchanged words since the last call of generateWords().
+*/
 const byte *const_words[6];
 byte const_words_length = 0;
 
@@ -135,6 +144,9 @@ CRGB savedBackground;
 byte savedAmbientEffect;
 byte savedTransitionEffect;
 
+/**
+   During night mode, the light is dimmed and the background turned off.
+*/
 void handleNightMode() {
     if (isNightModeEnabled) {
         time_t t = myRTC.get();
@@ -160,6 +172,9 @@ void handleNightMode() {
     }
 }
 
+/**
+   Generates the words to show using the actual time.
+*/
 void generateWords() {
     time_t local = now();
 
@@ -200,6 +215,9 @@ void showCorners(CRGB on, CRGB off) {
     }
 }
 
+/**
+   Adds a word to the new words array. When it was previously in the old words it is added to the constant words.
+*/
 void addWord(const byte part[]) {
     bool in_old_words = 0;
     for (byte i = 0; i < old_words_length; i++) {
@@ -221,6 +239,10 @@ void addWord(const byte part[]) {
     }
 }
 
+/**
+   Put all new and constant words to the old words.
+   When forceTransition is set, discard old words so all appear as new.
+*/
 void clearWords() {
     if (forceTransition) {
         old_words_length = 0;

@@ -6,6 +6,9 @@ extern byte new_words_length;
 extern const byte *const_words[];
 extern byte const_words_length;
 
+/**
+   Shows all the new and constant words.
+*/
 void showSimple(CRGB on, CRGB off) {
     fillLeds(off);
     showAllWords(on, new_words, new_words_length);
@@ -18,6 +21,9 @@ static void _fadeall() {
     }
 }
 
+/**
+   Ambient: "matrix effect" digital rain in background color.
+*/
 int8_t matrix_worms[11] = {-5, -10, -3, -13, -1, 0, -1, -5, -6, -11, -4};
 
 void ambientMatrix(CRGB on, CRGB off) {
@@ -36,6 +42,9 @@ void ambientMatrix(CRGB on, CRGB off) {
     showAllWords(on, const_words, const_words_length);
 }
 
+/**
+   Ambient: psychedelic random color noise.
+*/
 void ambientParty(CRGB on, CRGB off) {
     static byte e = 0;
     e++;
@@ -49,6 +58,9 @@ void ambientParty(CRGB on, CRGB off) {
     showAllWords(on, const_words, const_words_length);
 }
 
+/**
+   Ambient: gentle sine-wave brightness pulsing.
+*/
 void ambientBreathing(CRGB on, CRGB off) {
     static byte phase = 0;
     phase += 3;
@@ -61,6 +73,9 @@ void ambientBreathing(CRGB on, CRGB off) {
     showAllWords(on, const_words, const_words_length);
 }
 
+/**
+   Ambient: text color cycles through the HSV hue wheel.
+*/
 void ambientRainbow(CRGB on, CRGB off) {
     static byte hue = 0;
     hue++;
@@ -71,6 +86,9 @@ void ambientRainbow(CRGB on, CRGB off) {
     showAllWords(rainbow, const_words, const_words_length);
 }
 
+/**
+   Ambient: warm flickering candle-light background.
+*/
 void ambientFire(CRGB on, CRGB off) {
     for (int i = 0; i < 110; i++) {
         byte heat = random8(120, 255);
@@ -85,6 +103,9 @@ void ambientFire(CRGB on, CRGB off) {
     showAllWords(on, const_words, const_words_length);
 }
 
+/**
+   Ambient: random background LEDs sparkle briefly.
+*/
 void ambientTwinkle(CRGB on, CRGB off) {
     for (int i = 0; i < 110; i++) {
         leds[i].nscale8(200);
@@ -99,6 +120,9 @@ void ambientTwinkle(CRGB on, CRGB off) {
     showAllWords(on, const_words, const_words_length);
 }
 
+/**
+   Ambient: white pixels fall down columns at varying speeds.
+*/
 int8_t snow_flakes[11] = {-2, -8, -1, -12, -4, -6, -3, -9, -5, -7, -11};
 
 void ambientSnow(CRGB on, CRGB off) {

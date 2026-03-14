@@ -10,6 +10,9 @@ extern SoftwareSerial btSerial;
 extern DS3232RTC myRTC;
 extern bool forceTransition;
 
+/**
+   Parses and executes the bluetooth commands.
+*/
 void handleBluetooth() {
     while (btSerial.available() >= 4) {
         byte type = btSerial.read();
