@@ -7,6 +7,7 @@
 #include <DS3232RTC.h>  //http://github.com/JChristensen/DS3232RTC
 #include <TimeLib.h>    //https://github.com/PaulStoffregen/Time
 #include <Wire.h>  //http://arduino.cc/en/Reference/Wire (included with Arduino IDE)
+#include "SnakeGame.h"
 
 const byte PROTOCOL_VERSION = 1;
 
@@ -78,6 +79,22 @@ void setup() {
 }
 
 void loop() {
+    if (snakeGameActive) {
+        bool running = snakeUpdate(millis());
+        FastLED.show();
+        if (!running) {
+            // Game over flash done — notify phone
+            btSerial.write((byte)0x00);
+            // Restore brightness in case night mode was suspended
+            FastLED.setBrightness(brightness);
+            forceTransition = true;
+        }
+        delay(20);  // Fast refresh for smooth snake movement
+        // Still check bluetooth for direction commands
+        handleBluetooth();
+        return;
+    }
+
     handleNightMode();
 
     generateWords();
@@ -697,6 +714,33 @@ void handleBluetooth() {
                 }
                 btSerial.read();
                 btSerial.read();
+                break;
+            }
+            case 'N': {  // Snake game
+                byte subCmd = btSerial.read();
+                byte data1 = btSerial.read();
+                byte data2 = btSerial.read();
+                switch (subCmd) {
+                    case 1:  // Start game
+                        if (isNightModeActive) {
+                            FastLED.setBrightness(brightness);
+                        }
+                        snakeStart();
+                        Serial.println("Snake started");
+                        break;
+                    case 2:  // Direction
+                        snakeSetDirection(data1);
+                        break;
+                    case 0:  // Exit
+                    default:
+                        snakeStop();
+                        if (isNightModeActive) {
+                            FastLED.setBrightness(nightModeBrightness);
+                        }
+                        forceTransition = true;
+                        Serial.println("Snake stopped");
+                        break;
+                }
                 break;
             }
             default: {
