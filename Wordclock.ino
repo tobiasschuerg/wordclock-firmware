@@ -8,6 +8,8 @@
 #include <TimeLib.h>    //https://github.com/PaulStoffregen/Time
 #include <Wire.h>  //http://arduino.cc/en/Reference/Wire (included with Arduino IDE)
 
+const byte PROTOCOL_VERSION = 1;
+
 DS3232RTC myRTC;
 SoftwareSerial btSerial(8, 9);
 CRGB leds[10 * 11 + 4];
@@ -677,11 +679,12 @@ void handleBluetooth() {
                         btSerial.write(month());
                         btSerial.write((byte)(year() % 100));
                         break;
-                        //            case 'Z':
-                        //              btSerial.write('Z');
-                        //              btSerial.write(timezone);
-                        //              btSerial.write('Z'); btSerial.write('Z');
-                        //              break;
+                    case 'V':
+                        btSerial.write('V');
+                        btSerial.write(PROTOCOL_VERSION);
+                        btSerial.write((byte)0);
+                        btSerial.write((byte)0);
+                        break;
                 }
                 btSerial.read();
                 btSerial.read();

@@ -79,7 +79,7 @@ Ambient and transition effects are independently configurable. Ambient effects r
 
 ## Bluetooth Protocol
 
-Single-character commands followed by 3 data bytes: `F` (foreground RGB), `B` (background RGB), `E` (ambientEffect, transitionEffect, showEsIst), `T` (time h/m/s), `D` (date d/m/y), `G` (query), `S` (save to EEPROM).
+Single-character commands followed by 3 data bytes: `F` (foreground RGB), `B` (background RGB), `E` (ambientEffect, transitionEffect, showEsIst), `T` (time h/m/s), `D` (date d/m/y), `G` (query, sub-commands: F/B/E/T/D/V), `S` (save to EEPROM). `GV` returns the protocol version (currently 1); the app checks this on connect and rejects mismatches.
 
 ## Key Details
 
