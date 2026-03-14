@@ -25,16 +25,16 @@ byte effect = 3;
 byte hwVersion = 2;
 bool showEsIst = false;
 
-extern int brightness = 200;
+int brightness = 200;
 
 /**
-  Night mode can be confiureg so that the clock is less bright and consumes less power.
+  Night mode can be configured so that the clock is less bright and consumes less power.
   */
-extern bool isNightModeEnabled = true;
-extern bool isNightModeActive = false;
-extern int nightModeStartHour = 23;
-extern int nightModeEndtHour = 6;
-extern int nightModeBrightness = 50;
+bool isNightModeEnabled = true;
+bool isNightModeActive = false;
+int nightModeStartHour = 23;
+int nightModeEndtHour = 6;
+int nightModeBrightness = 50;
 
 
 

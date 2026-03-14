@@ -118,20 +118,34 @@ void loop() {
 /**
  * During night mode (configurable in the config), the light is dimmed and the background turned off.
  */
+bool isNightHour(int h) {
+    if (nightModeStartHour > nightModeEndtHour) {
+        // e.g. 23:00 - 06:00 (spans midnight)
+        return h >= nightModeStartHour || h < nightModeEndtHour;
+    } else {
+        return h >= nightModeStartHour && h < nightModeEndtHour;
+    }
+}
+
+CRGB savedBackground;
+byte savedEffect;
+
 void handleNightMode() {
     if (isNightModeEnabled) {
         time_t t = RTC.get();
         int h = hour(t);
-        if (!isNightModeActive && h >= nightModeStartHour) {
+        if (!isNightModeActive && isNightHour(h)) {
+            savedBackground = background;
+            savedEffect = effect;
             background = CRGB(0, 0, 0);                  // turn off background
             FastLED.setBrightness(nightModeBrightness);  // dim the time
             effect = 0;                                  // no effect
-            // TODO: turn off bluetooth? increase delay?
             isNightModeActive = true;
             Serial.println("Night mode enabled");
-        } else if (isNightModeActive && h >= nightModeEndtHour && h < nightModeStartHour) {
+        } else if (isNightModeActive && !isNightHour(h)) {
+            background = savedBackground;
+            effect = savedEffect;
             FastLED.setBrightness(brightness);
-            loadSettings();
             isNightModeActive = false;
             Serial.println("Night mode disabled");
         }
@@ -278,7 +292,7 @@ void showRollDown(CRGB on, CRGB off) {
 /**
    Shows the "matrix effect" in background color and the time in foreground color.
 */
-byte matrix_worms[11] = {-5, -10, -3, -13, -1, 0, -1, -5, -6, -11, -4};
+int8_t matrix_worms[11] = {-5, -10, -3, -13, -1, 0, -1, -5, -6, -11, -4};
 
 void showMatrix(CRGB on, CRGB off) {
     _fadeall();
@@ -287,7 +301,7 @@ void showMatrix(CRGB on, CRGB off) {
         if (matrix_worms[i] < 10) {
             setLeds(matrix_worms[i], i, off, 1, false);
         } else if (matrix_worms[i] == 10) {
-            matrix_worms[i] = -random8(14);
+            matrix_worms[i] = -(int8_t)random8(14);
         }
         matrix_worms[i]++;
     }
@@ -305,7 +319,7 @@ void _fadeall() {
 
 int column = 0;
 int row = 0;
-time_t t = now();
+time_t scannerLastTime = 0;
 
 void scanner(CRGB on, CRGB off) {
 
@@ -318,7 +332,7 @@ void scanner(CRGB on, CRGB off) {
 
     if (row == 0 && column == 0) {
         fillLeds(off);
-        int duration = now() - t;
+        int duration = now() - scannerLastTime;
         Serial.print("Duration(sec): ");
         Serial.println(duration);
         if (duration > 60) {
@@ -327,7 +341,7 @@ void scanner(CRGB on, CRGB off) {
             delayMillis = delayMillis + 50;
         }
         Serial.println(delayMillis);
-        t = now();
+        scannerLastTime = now();
     }
     setLeds(row, column, on, 1, false);
 }
@@ -486,7 +500,7 @@ void handleBluetooth() {
                         btSerial.write('D');
                         btSerial.write(day());
                         btSerial.write(month());
-                        btSerial.write(year());
+                        btSerial.write((byte)(year() % 100));
                         break;
                         //            case 'Z':
                         //              btSerial.write('Z');
@@ -524,6 +538,7 @@ void addWord(const byte part[]) {
             for (byte e = i; e < old_words_length; e++) {
                 old_words[e] = old_words[e + 1];
             }
+            break;
         }
     }
 
@@ -592,15 +607,15 @@ void setLeds(int y, int x, CRGB color, int len, bool add) {
     if (y < 0 || y > 9) return;
     int start_led = !(y % 2) ? y * 11 + x : y * 11 + (11 - x) - 1;
     int dir = !(y % 2) ? 1 : -1;
-    if (hwVersion == 1) dir = !dir;
+    if (hwVersion == 1) dir = -dir;
 
-    if (add) {
-        for (int i = 0; i < len; i++) {
-            leds[start_led + i * dir] += color;
-        }
-    } else {
-        for (int i = 0; i < len; i++) {
-            leds[start_led + i * dir] = color;
+    for (int i = 0; i < len; i++) {
+        int idx = start_led + i * dir;
+        if (idx < 0 || idx >= 10 * 11) continue;
+        if (add) {
+            leds[idx] += color;
+        } else {
+            leds[idx] = color;
         }
     }
 }
