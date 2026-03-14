@@ -36,7 +36,27 @@ Built-in libraries used: Wire, SoftwareSerial, EEPROM.
 
 ## Architecture
 
-**Wordclock.ino** — Main sketch with `setup()`/`loop()`. Contains all display logic: word generation from current time, 6 visual effects (simple, fade, typewriter, matrix, rolldown, party), night mode handling, Bluetooth command processing, and LED rendering via FastLED.
+**Wordclock.ino** — Main sketch with `setup()`/`loop()`. Contains all display logic: word generation from current time, 14 visual effects, night mode handling, Bluetooth command processing, and LED rendering via FastLED.
+
+### Effects (IDs 0-14)
+
+| ID | Name | Type | Description |
+|----|------|------|-------------|
+| 0 | Simple | Static | No animation, immediate word display |
+| 1 | Fade | Transition | Words crossfade in/out (~1.6s) |
+| 2 | Typewriter | Transition | Characters appear/disappear sequentially |
+| 3 | Matrix | Ambient | Digital rain background (default) |
+| 4 | RollDown | Transition | Words vertically scroll in/out with easing |
+| 5 | Party | Ambient | Random rainbow noise background |
+| 6 | Scanner | Debug | LED-by-LED scan for calibration |
+| 7 | Wave | Transition | Circular ripple reveals new words from center |
+| 8 | Slide | Transition | Old words slide left, new words slide in from right |
+| 9 | Breathing | Ambient | Sine-wave brightness pulsing |
+| 10 | Rainbow | Ambient | Text color cycles through HSV hue wheel |
+| 11 | Fire | Ambient | Warm flickering candle-light background |
+| 12 | Twinkle | Ambient | Random background LEDs sparkle |
+| 13 | Snow | Ambient | White pixels fall down columns at varying speeds |
+| 14 | Pulse | Transition | Words flash bright on change, then settle |
 
 **WordClockConfig.h/.cpp** — German word definitions as LED position arrays `[row, col, length]`, global state variables (colors, brightness, effect selection, night mode params), and default values.
 
