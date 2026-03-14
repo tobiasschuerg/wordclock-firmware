@@ -5,11 +5,11 @@ Arduino Nano firmware for a WS2812B/Neopixel German word clock with 114 RGB LEDs
 
 ## Protocol Version
 
-The firmware and Android app communicate over a versioned binary Bluetooth protocol. The current protocol version is **1** (defined as `PROTOCOL_VERSION` in `Wordclock.ino`).
+The firmware and Android app communicate over a versioned binary Bluetooth protocol. The current protocol version is **1** (defined as `PROTOCOL_VERSION` in `BluetoothHandler.h`).
 
 The app queries the firmware version on connect (`GV` command) and rejects mismatches. When making breaking protocol changes:
 
-1. Increment `PROTOCOL_VERSION` in `Wordclock.ino`
+1. Increment `PROTOCOL_VERSION` in `BluetoothHandler.h`
 2. Increment `PROTOCOL_VERSION` in the Android app's `BluetoothMessageService.kt`
 3. Tag both repos: `git tag v<N>` (matching the new version number)
 

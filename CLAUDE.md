@@ -36,7 +36,21 @@ Built-in libraries used: Wire, SoftwareSerial, EEPROM.
 
 ## Architecture
 
-**Wordclock.ino** — Main sketch with `setup()`/`loop()`. Contains all display logic: word generation from current time, ambient and transition effects (independently configurable), night mode handling, Bluetooth command processing, and LED rendering via FastLED.
+**Wordclock.ino** — Main sketch with `setup()`/`loop()`, night mode handling, and German word generation from the current time.
+
+**LedUtils.h/.cpp** — Low-level LED helpers: `setLeds()` (handles hardware wiring differences), `fillLeds()`, and `showAllWords()` overloads. Used by all effect modules and SnakeGame.
+
+**AmbientEffects.h/.cpp** — 7 ambient effects (continuous background animations) plus `showSimple()` (solid display). Each ambient function manages its own static state.
+
+**TransitionEffects.h/.cpp** — 6 transition effects that play once when displayed words change.
+
+**BluetoothHandler.h/.cpp** — Bluetooth protocol parser (`handleBluetooth()`) and `PROTOCOL_VERSION`. Processes 4-byte commands from the HC-05 module.
+
+**WordClockConfig.h/.cpp** — German word definitions as LED position arrays `[row, col, length]`, global state variables (colors, brightness, effect selection, night mode params), and default values.
+
+**WordClockSettings.h/.cpp** — EEPROM persistence (addresses 0-8): foreground/background colors, effect, showEsIst flag, hardware version. Two functions: `storeSettings()` and `loadSettings()`.
+
+**SnakeGame.h/.cpp** — Snake game playable over Bluetooth. Uses `LedUtils` for LED access.
 
 ### Effects
 
@@ -67,10 +81,6 @@ Ambient and transition effects are independently configurable. Ambient effects r
 | 5 | Slide | Old words slide left, new words slide in from right |
 | 6 | Pulse | Words flash bright on change, then settle |
 
-**WordClockConfig.h/.cpp** — German word definitions as LED position arrays `[row, col, length]`, global state variables (colors, brightness, effect selection, night mode params), and default values.
-
-**WordClockSettings.h/.cpp** — EEPROM persistence (addresses 0-8): foreground/background colors, effect, showEsIst flag, hardware version. Two functions: `storeSettings()` and `loadSettings()`.
-
 ## Hardware Pin Mapping
 
 - LED data: pin 7 (FastLED NEOPIXEL)
@@ -83,9 +93,9 @@ Single-character commands followed by 3 data bytes: `F` (foreground RGB), `B` (b
 
 ## Protocol Versioning
 
-`PROTOCOL_VERSION` (in `Wordclock.ino`) must be incremented on any breaking protocol change. When incrementing:
+`PROTOCOL_VERSION` (in `BluetoothHandler.h`) must be incremented on any breaking protocol change. When incrementing:
 
-1. Update `PROTOCOL_VERSION` in `Wordclock.ino`
+1. Update `PROTOCOL_VERSION` in `BluetoothHandler.h`
 2. Update `PROTOCOL_VERSION` in the Android app's `BluetoothMessageService.kt`
 3. Tag both repos: `git tag v<N>`
 

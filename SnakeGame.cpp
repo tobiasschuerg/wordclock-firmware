@@ -79,8 +79,13 @@ bool snakeUpdate(unsigned long currentMillis) {
 
     if (flashing) {
         if (currentMillis - flashStart < FLASH_MS) {
-            for (int i = 0; i < SNAKE_ROWS * SNAKE_COLS + 4; i++) {
-                leds[i] = CRGB::White;
+            fillLeds(CRGB::Black);
+            for (int i = SNAKE_ROWS * SNAKE_COLS; i < SNAKE_ROWS * SNAKE_COLS + 4; i++) {
+                leds[i] = CRGB::Black;
+            }
+            // Flash only the snake body red (low power draw)
+            for (byte i = 0; i < snakeLength; i++) {
+                setLeds(body[i].row, body[i].col, CRGB(80, 0, 0), 1, false);
             }
             return true;
         } else {
@@ -110,9 +115,6 @@ bool snakeUpdate(unsigned long currentMillis) {
         if (body[i].row == newRow && body[i].col == newCol) {
             flashing = true;
             flashStart = currentMillis;
-            for (int j = 0; j < SNAKE_ROWS * SNAKE_COLS + 4; j++) {
-                leds[j] = CRGB::White;
-            }
             return true;
         }
     }

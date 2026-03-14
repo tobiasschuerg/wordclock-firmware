@@ -2,8 +2,8 @@
 #define SNAKE_GAME_H
 
 #include <FastLED.h>
+#include "LedUtils.h"
 
-// Direction constants
 #define SNAKE_UP    0
 #define SNAKE_RIGHT 1
 #define SNAKE_DOWN  2
@@ -24,9 +24,5 @@ void snakeStart();
 void snakeStop();
 void snakeSetDirection(byte dir);
 bool snakeUpdate(unsigned long currentMillis);
-
-// Defined in Wordclock.ino — handles hardware wiring differences
-extern void setLeds(int y, int x, CRGB color, int len, bool add);
-extern void fillLeds(CRGB off);
 
 #endif // SNAKE_GAME_H
