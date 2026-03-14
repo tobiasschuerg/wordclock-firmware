@@ -81,6 +81,14 @@ Ambient and transition effects are independently configurable. Ambient effects r
 
 Single-character commands followed by 3 data bytes: `F` (foreground RGB), `B` (background RGB), `E` (ambientEffect, transitionEffect, showEsIst), `T` (time h/m/s), `D` (date d/m/y), `G` (query, sub-commands: F/B/E/T/D/V), `S` (save to EEPROM). `GV` returns the protocol version (currently 1); the app checks this on connect and rejects mismatches.
 
+## Protocol Versioning
+
+`PROTOCOL_VERSION` (in `Wordclock.ino`) must be incremented on any breaking protocol change. When incrementing:
+
+1. Update `PROTOCOL_VERSION` in `Wordclock.ino`
+2. Update `PROTOCOL_VERSION` in the Android app's `BluetoothMessageService.kt`
+3. Tag both repos: `git tag v<N>`
+
 ## Key Details
 
 - Two hardware versions with different LED wiring directions (controlled by `hwVersion`)
