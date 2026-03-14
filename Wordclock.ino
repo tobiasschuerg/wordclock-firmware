@@ -57,6 +57,7 @@ void setup() {
     //setup FastLED
     delay(1000);  // power-up safety delay
     FastLED.addLeds<NEOPIXEL, 7>(leds, 10 * 11 + 4);
+    FastLED.setMaxPowerInVoltsAndMilliamps(5, 1500);  // cap total draw to protect BT module
     FastLED.setBrightness(brightness);
     // show all red
     for (int i = 0; i < 10 * 11 + 4; i++) {
