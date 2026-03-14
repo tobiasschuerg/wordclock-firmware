@@ -4,12 +4,11 @@
 #include <EEPROM.h>
 #include <SoftwareSerial.h>
 #include <FastLED.h>
-#include <DS3232RTC.h>  // needs 1.x    //http://github.com/JChristensen/DS3232RTC
+#include <DS3232RTC.h>  //http://github.com/JChristensen/DS3232RTC
 #include <TimeLib.h>    //https://github.com/PaulStoffregen/Time
-// #include <Timezone.h>     //https://github.com/JChristensen/Timezone
 #include <Wire.h>  //http://arduino.cc/en/Reference/Wire (included with Arduino IDE)
-//#include <glcdfont.c>
 
+DS3232RTC myRTC;
 SoftwareSerial btSerial(8, 9);
 CRGB leds[10 * 11 + 4];
 
@@ -45,7 +44,7 @@ void setup() {
     Serial.begin(9600);
 
     // sync arduino with the real time clock
-    setSyncProvider(RTC.get);
+    setSyncProvider(myRTC.get);
     if (timeStatus() != timeSet) {
         Serial.println("Unable to sync with the RTC");
     } else {
@@ -132,7 +131,7 @@ byte savedEffect;
 
 void handleNightMode() {
     if (isNightModeEnabled) {
-        time_t t = RTC.get();
+        time_t t = myRTC.get();
         int h = hour(t);
         if (!isNightModeActive && isNightHour(h)) {
             savedBackground = background;
@@ -411,7 +410,7 @@ void handleBluetooth() {
                 byte green = btSerial.read();
                 byte blue = btSerial.read();
                 foreground = CRGB(red, green, blue);
-                Serial.println(foreground);
+                Serial.print(red); Serial.print(','); Serial.print(green); Serial.print(','); Serial.println(blue);
                 break;
             }
             case 'B': {  //background color
@@ -439,7 +438,7 @@ void handleBluetooth() {
                 Serial.println(s);
 
                 setTime(h, m, s, day(), month(), year());
-                RTC.set(now());
+                myRTC.set(now());
                 break;
             }
             case 'D': {  //date
@@ -453,7 +452,7 @@ void handleBluetooth() {
                 Serial.print('-');
                 Serial.println(y);
                 setTime(hour(), minute(), second(), d, m, y);
-                RTC.set(now());
+                myRTC.set(now());
                 break;
             }
                 //      case 'Z': { //timeZone

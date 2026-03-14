@@ -8,11 +8,28 @@ Arduino Nano-based German word clock using WS2812B/Neopixel RGB LEDs (114 LEDs: 
 
 ## Build & Upload
 
-This is an **Arduino IDE** project (not PlatformIO). Open `Wordclock.ino` in Arduino IDE, select board "Arduino Nano", and upload via USB.
+This is an **Arduino IDE** project (not PlatformIO). The Arduino Nano uses the **old bootloader** (ATmega328P old bootloader).
+
+### Via Arduino IDE
+Open `Wordclock.ino`, select board "Arduino Nano", processor "ATmega328P (Old Bootloader)", and upload via USB.
+
+### Via CLI (arduino-cli)
+```bash
+# The bundled arduino-cli from Arduino IDE 2.x:
+ARDUINO_CLI="/c/Program Files/Arduino IDE/resources/app/lib/backend/resources/arduino-cli.exe"
+
+# Compile
+"$ARDUINO_CLI" compile --fqbn arduino:avr:nano:cpu=atmega328old "Wordclock"
+
+# Upload (adjust COM port as needed)
+"$ARDUINO_CLI" upload --fqbn arduino:avr:nano:cpu=atmega328old --port COM3 "Wordclock"
+```
+
+Note: Using `cpu=atmega328` (new bootloader) will fail with "not in sync" errors. Always use `cpu=atmega328old`.
 
 **Required external libraries:**
 - FastLED (LED control)
-- DS3232RTC v1.x (real-time clock)
+- DS3232RTC v2.x (real-time clock) — code uses an explicit `DS3232RTC myRTC` instance (v2.x removed the global `RTC` object)
 - TimeLib (Paul Stoffregen's time library)
 
 Built-in libraries used: Wire, SoftwareSerial, EEPROM.
