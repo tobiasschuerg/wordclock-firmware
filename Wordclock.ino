@@ -34,6 +34,7 @@ byte const_words_length = 0;
 
 int delayMillis = 550;
 time_t lastBt;
+bool forceTransition = false;
 
 void printDateTime(time_t t) {
     char buffer[20];
@@ -646,6 +647,13 @@ void handleBluetooth() {
                 storeSettings();
                 break;
             }
+            case 'P': {  // play transition
+                btSerial.read();
+                btSerial.read();
+                btSerial.read();
+                forceTransition = true;
+                break;
+            }
             case 'G': {  //get
                 byte toGet = btSerial.read();
                 Serial.println((char) toGet);
@@ -729,8 +737,17 @@ void addWord(const byte part[]) {
 
 /**
    Put all new and constant words to the old words.
+   When forceTransition is set, discard old words so all appear as new.
 */
 void clearWords() {
+    if (forceTransition) {
+        old_words_length = 0;
+        new_words_length = 0;
+        const_words_length = 0;
+        forceTransition = false;
+        return;
+    }
+
     for (byte i = 0; i < new_words_length; i++) {
         old_words[i] = new_words[i];
     }
