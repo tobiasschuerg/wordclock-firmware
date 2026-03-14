@@ -80,53 +80,31 @@ void loop() {
 
     showCorners(foreground, background);
 
-    switch (effect) {
-        case 1:
-            showFade(foreground, background);
-            break;
-        case 2:
-            showTypewriter(foreground, background);
-            break;
-        case 3:
-            showMatrix(foreground, background);
-            break;
-        case 4:
-            showRollDown(foreground, background);
-            break;
-        case 5:
-            showParty(foreground, background);
-            break;
-        case 6:
-            scanner(foreground, background);
-            break;
-        case 7:
-            showWave(foreground, background);
-            break;
-        case 8:
-            showSlideLeft(foreground, background);
-            break;
-        case 9:
-            showBreathing(foreground, background);
-            break;
-        case 10:
-            showRainbow(foreground, background);
-            break;
-        case 11:
-            showFire(foreground, background);
-            break;
-        case 12:
-            showTwinkle(foreground, background);
-            break;
-        case 13:
-            showSnow(foreground, background);
-            break;
-        case 14:
-            showPulse(foreground, background);
-            break;
+    // Run transition animation when words change
+    bool wordsChanged = (new_words_length > 0 || old_words_length > 0);
+    if (wordsChanged) {
+        switch (transitionEffect) {
+            case 1: transitionFade(foreground, background); break;
+            case 2: transitionTypewriter(foreground, background); break;
+            case 3: transitionRollDown(foreground, background); break;
+            case 4: transitionWave(foreground, background); break;
+            case 5: transitionSlide(foreground, background); break;
+            case 6: transitionPulse(foreground, background); break;
+            default: break;  // 0 = no transition
+        }
+    }
+
+    // Run ambient effect every frame
+    switch (ambientEffect) {
+        case 1: ambientMatrix(foreground, background); break;
+        case 2: ambientParty(foreground, background); break;
+        case 3: ambientBreathing(foreground, background); break;
+        case 4: ambientRainbow(foreground, background); break;
+        case 5: ambientFire(foreground, background); break;
+        case 6: ambientTwinkle(foreground, background); break;
+        case 7: ambientSnow(foreground, background); break;
         case 0:
-        default:
-            showSimple(foreground, background);
-            break;
+        default: showSimple(foreground, background); break;
     }
 
     FastLED.show();
@@ -151,7 +129,8 @@ bool isNightHour(int h) {
 }
 
 CRGB savedBackground;
-byte savedEffect;
+byte savedAmbientEffect;
+byte savedTransitionEffect;
 
 void handleNightMode() {
     if (isNightModeEnabled) {
@@ -159,15 +138,18 @@ void handleNightMode() {
         int h = hour(t);
         if (!isNightModeActive && isNightHour(h)) {
             savedBackground = background;
-            savedEffect = effect;
+            savedAmbientEffect = ambientEffect;
+            savedTransitionEffect = transitionEffect;
             background = CRGB(0, 0, 0);                  // turn off background
             FastLED.setBrightness(nightModeBrightness);  // dim the time
-            effect = 0;                                  // no effect
+            ambientEffect = 0;                           // no ambient effect
+            transitionEffect = 0;                        // no transition effect
             isNightModeActive = true;
             Serial.println("Night mode enabled");
         } else if (isNightModeActive && !isNightHour(h)) {
             background = savedBackground;
-            effect = savedEffect;
+            ambientEffect = savedAmbientEffect;
+            transitionEffect = savedTransitionEffect;
             FastLED.setBrightness(brightness);
             isNightModeActive = false;
             Serial.println("Night mode disabled");
@@ -269,55 +251,47 @@ void showSimple(CRGB on, CRGB off) {
 }
 
 /**
-   Fades new words in and old words out.
+   Transition: fades new words in and old words out.
 */
-void showFade(CRGB on, CRGB off) {
-    if (new_words_length > 0 || old_words_length > 0) {
-        for (int e = 1; e <= 256 / 8; e++) {
-            int i = e * 8 - 1;
-            fillLeds(off);
-            showAllWords(on, const_words, const_words_length);
-            showAllWords(off.lerp8(on, i), new_words, new_words_length);
-            showAllWords(on.lerp8(off, i), old_words, old_words_length);
-            FastLED.show();
-            delay(50);
-        }
+void transitionFade(CRGB on, CRGB off) {
+    for (int e = 1; e <= 256 / 8; e++) {
+        int i = e * 8 - 1;
+        fillLeds(off);
+        showAllWords(on, const_words, const_words_length);
+        showAllWords(off.lerp8(on, i), new_words, new_words_length);
+        showAllWords(on.lerp8(off, i), old_words, old_words_length);
+        FastLED.show();
+        delay(50);
     }
-
-    showSimple(on, off);
 }
 
 /**
-   Rolls characters out and in to change display..
+   Transition: rolls characters out and in to change display.
 */
-void showRollDown(CRGB on, CRGB off) {
-    if (new_words_length > 0 || old_words_length > 0) {
-        for (int e = 1; e <= 10; e++) {
-            fillLeds(off);
-            showAllWords(on, const_words, const_words_length, 0, e);
-            showAllWords(on, old_words, old_words_length, 0, e);
-            FastLED.show();
-            delay(80 + (10 - e) * 5);
-        }
-
-        for (int e = 10; e >= 0; e--) {
-            fillLeds(off);
-            showAllWords(on, const_words, const_words_length, 0, -e);
-            showAllWords(on, new_words, new_words_length, 0, -e);
-            FastLED.show();
-            delay(80 + (10 - e) * 8);
-        }
+void transitionRollDown(CRGB on, CRGB off) {
+    for (int e = 1; e <= 10; e++) {
+        fillLeds(off);
+        showAllWords(on, const_words, const_words_length, 0, e);
+        showAllWords(on, old_words, old_words_length, 0, e);
+        FastLED.show();
+        delay(80 + (10 - e) * 5);
     }
 
-    showSimple(on, off);
+    for (int e = 10; e >= 0; e--) {
+        fillLeds(off);
+        showAllWords(on, const_words, const_words_length, 0, -e);
+        showAllWords(on, new_words, new_words_length, 0, -e);
+        FastLED.show();
+        delay(80 + (10 - e) * 8);
+    }
 }
 
 /**
-   Shows the "matrix effect" in background color and the time in foreground color.
+   Ambient: "matrix effect" digital rain in background color.
 */
 int8_t matrix_worms[11] = {-5, -10, -3, -13, -1, 0, -1, -5, -6, -11, -4};
 
-void showMatrix(CRGB on, CRGB off) {
+void ambientMatrix(CRGB on, CRGB off) {
     _fadeall();
 
     for (byte i = 0; i < 11; i++) {
@@ -370,43 +344,39 @@ void scanner(CRGB on, CRGB off) {
 }
 
 /**
-   Removes old words and inserts new words in a typewriter style.
+   Transition: removes old words and inserts new words in a typewriter style.
 */
-void showTypewriter(CRGB on, CRGB off) {
-    if (new_words_length > 0 || old_words_length > 0) {
-        byte max_old_word = 0;
-        byte max_new_word = 0;
+void transitionTypewriter(CRGB on, CRGB off) {
+    byte max_old_word = 0;
+    byte max_new_word = 0;
 
-        for (byte i = 0; i < old_words_length; i++)
-            max_old_word = max(max_old_word, old_words[i][2]);
+    for (byte i = 0; i < old_words_length; i++)
+        max_old_word = max(max_old_word, old_words[i][2]);
 
-        for (byte i = 0; i < new_words_length; i++)
-            max_new_word = max(max_new_word, new_words[i][2]);
+    for (byte i = 0; i < new_words_length; i++)
+        max_new_word = max(max_new_word, new_words[i][2]);
 
-        for (byte i = 0; i <= max_old_word; i++) {
-            fillLeds(off);
-            showAllWords(on, old_words, old_words_length, 0, 0, 200, i);
-            showAllWords(on, const_words, const_words_length);
-            FastLED.show();
-            delay(180);
-        }
-
+    for (byte i = 0; i <= max_old_word; i++) {
         fillLeds(off);
+        showAllWords(on, old_words, old_words_length, 0, 0, 200, i);
         showAllWords(on, const_words, const_words_length);
-        for (byte i = 0; i <= max_new_word; i++) {
-            showAllWords(on, new_words, new_words_length, 0, 0, i, 0);
-            FastLED.show();
-            delay(180);
-        }
+        FastLED.show();
+        delay(180);
     }
 
-    showSimple(on, off);
+    fillLeds(off);
+    showAllWords(on, const_words, const_words_length);
+    for (byte i = 0; i <= max_new_word; i++) {
+        showAllWords(on, new_words, new_words_length, 0, 0, i, 0);
+        FastLED.show();
+        delay(180);
+    }
 }
 
 /**
-   Rolls characters out and in to change display..
+   Ambient: psychedelic random color noise.
 */
-void showParty(CRGB on, CRGB off) {
+void ambientParty(CRGB on, CRGB off) {
     static byte e = 0;
     e++;
     if (e < 3) return;
@@ -420,78 +390,72 @@ void showParty(CRGB on, CRGB off) {
 }
 
 /**
-   Wave effect: circular ripple reveals new words from center outward.
+   Transition: circular ripple reveals new words from center outward.
 */
-void showWave(CRGB on, CRGB off) {
-    if (new_words_length > 0 || old_words_length > 0) {
-        // Ripple outward from center (row 4.5, col 5)
-        for (int radius = 0; radius <= 12; radius++) {
-            fillLeds(off);
-            showAllWords(on, const_words, const_words_length);
-            // Show new words only where within radius
-            for (byte w = 0; w < new_words_length; w++) {
-                byte row = new_words[w][0];
-                byte col = new_words[w][1];
-                byte len = new_words[w][2];
-                for (byte c = 0; c < len; c++) {
-                    int dx = (int)(col + c) - 5;
-                    int dy = (int)row - 5;
-                    int dist = (dx * dx + dy * dy);
-                    if (dist <= radius * radius) {
-                        setLeds(row, col + c, on, 1, false);
-                    }
+void transitionWave(CRGB on, CRGB off) {
+    // Ripple outward from center (row 4.5, col 5)
+    for (int radius = 0; radius <= 12; radius++) {
+        fillLeds(off);
+        showAllWords(on, const_words, const_words_length);
+        // Show new words only where within radius
+        for (byte w = 0; w < new_words_length; w++) {
+            byte row = new_words[w][0];
+            byte col = new_words[w][1];
+            byte len = new_words[w][2];
+            for (byte c = 0; c < len; c++) {
+                int dx = (int)(col + c) - 5;
+                int dy = (int)row - 5;
+                int dist = (dx * dx + dy * dy);
+                if (dist <= radius * radius) {
+                    setLeds(row, col + c, on, 1, false);
                 }
             }
-            // Fade out old words outside radius
-            for (byte w = 0; w < old_words_length; w++) {
-                byte row = old_words[w][0];
-                byte col = old_words[w][1];
-                byte len = old_words[w][2];
-                for (byte c = 0; c < len; c++) {
-                    int dx = (int)(col + c) - 5;
-                    int dy = (int)row - 5;
-                    int dist = (dx * dx + dy * dy);
-                    if (dist > radius * radius) {
-                        setLeds(row, col + c, on, 1, false);
-                    }
-                }
-            }
-            FastLED.show();
-            delay(60);
         }
+        // Fade out old words outside radius
+        for (byte w = 0; w < old_words_length; w++) {
+            byte row = old_words[w][0];
+            byte col = old_words[w][1];
+            byte len = old_words[w][2];
+            for (byte c = 0; c < len; c++) {
+                int dx = (int)(col + c) - 5;
+                int dy = (int)row - 5;
+                int dist = (dx * dx + dy * dy);
+                if (dist > radius * radius) {
+                    setLeds(row, col + c, on, 1, false);
+                }
+            }
+        }
+        FastLED.show();
+        delay(60);
     }
-    showSimple(on, off);
 }
 
 /**
-   Slide effect: old words slide out left, new words slide in from right.
+   Transition: old words slide out left, new words slide in from right.
 */
-void showSlideLeft(CRGB on, CRGB off) {
-    if (new_words_length > 0 || old_words_length > 0) {
-        // Slide old words out to the left
-        for (int e = 1; e <= 11; e++) {
-            fillLeds(off);
-            showAllWords(on, const_words, const_words_length);
-            showAllWords(on, old_words, old_words_length, -e, 0);
-            FastLED.show();
-            delay(50);
-        }
-        // Slide new words in from the right
-        for (int e = 11; e >= 0; e--) {
-            fillLeds(off);
-            showAllWords(on, const_words, const_words_length);
-            showAllWords(on, new_words, new_words_length, e, 0);
-            FastLED.show();
-            delay(50);
-        }
+void transitionSlide(CRGB on, CRGB off) {
+    // Slide old words out to the left
+    for (int e = 1; e <= 11; e++) {
+        fillLeds(off);
+        showAllWords(on, const_words, const_words_length);
+        showAllWords(on, old_words, old_words_length, -e, 0);
+        FastLED.show();
+        delay(50);
     }
-    showSimple(on, off);
+    // Slide new words in from the right
+    for (int e = 11; e >= 0; e--) {
+        fillLeds(off);
+        showAllWords(on, const_words, const_words_length);
+        showAllWords(on, new_words, new_words_length, e, 0);
+        FastLED.show();
+        delay(50);
+    }
 }
 
 /**
-   Breathing effect: gentle sine-wave brightness pulsing.
+   Ambient: gentle sine-wave brightness pulsing.
 */
-void showBreathing(CRGB on, CRGB off) {
+void ambientBreathing(CRGB on, CRGB off) {
     static byte phase = 0;
     phase += 3;
     // sin8 returns 0-255, map to brightness range 40-255
@@ -505,9 +469,9 @@ void showBreathing(CRGB on, CRGB off) {
 }
 
 /**
-   Rainbow effect: text color cycles through the HSV hue wheel.
+   Ambient: text color cycles through the HSV hue wheel.
 */
-void showRainbow(CRGB on, CRGB off) {
+void ambientRainbow(CRGB on, CRGB off) {
     static byte hue = 0;
     hue++;
     CRGB rainbow = CHSV(hue, 255, 255);
@@ -518,9 +482,9 @@ void showRainbow(CRGB on, CRGB off) {
 }
 
 /**
-   Fire effect: warm flickering candle-light background.
+   Ambient: warm flickering candle-light background.
 */
-void showFire(CRGB on, CRGB off) {
+void ambientFire(CRGB on, CRGB off) {
     for (int i = 0; i < 110; i++) {
         // Random warm tones: red-orange-yellow
         byte heat = random8(120, 255);
@@ -537,9 +501,9 @@ void showFire(CRGB on, CRGB off) {
 }
 
 /**
-   Twinkle effect: random background LEDs sparkle briefly.
+   Ambient: random background LEDs sparkle briefly.
 */
-void showTwinkle(CRGB on, CRGB off) {
+void ambientTwinkle(CRGB on, CRGB off) {
     // Fade all LEDs slightly each frame
     for (int i = 0; i < 110; i++) {
         leds[i].nscale8(200);
@@ -556,11 +520,11 @@ void showTwinkle(CRGB on, CRGB off) {
 }
 
 /**
-   Snow effect: white pixels fall down columns at varying speeds.
+   Ambient: white pixels fall down columns at varying speeds.
 */
 int8_t snow_flakes[11] = {-2, -8, -1, -12, -4, -6, -3, -9, -5, -7, -11};
 
-void showSnow(CRGB on, CRGB off) {
+void ambientSnow(CRGB on, CRGB off) {
     // Fade existing pixels
     for (int i = 0; i < 110; i++) {
         leds[i].nscale8(150);
@@ -586,30 +550,25 @@ void showSnow(CRGB on, CRGB off) {
 }
 
 /**
-   Pulse effect: words briefly flash brighter when they change, then settle.
+   Transition: words briefly flash brighter when they change, then settle.
 */
-void showPulse(CRGB on, CRGB off) {
-    if (new_words_length > 0 || old_words_length > 0) {
-        // Flash bright
-        fillLeds(off);
-        showAllWords(on, const_words, const_words_length);
-        CRGB bright = on;
-        bright.nscale8(255);
-        showAllWords(bright, new_words, new_words_length);
-        FastLED.setBrightness(255);
-        FastLED.show();
-        delay(150);
+void transitionPulse(CRGB on, CRGB off) {
+    // Flash bright
+    fillLeds(off);
+    showAllWords(on, const_words, const_words_length);
+    showAllWords(on, new_words, new_words_length);
+    FastLED.setBrightness(255);
+    FastLED.show();
+    delay(150);
 
-        // Fade back to normal brightness over 8 steps
-        for (int e = 7; e >= 0; e--) {
-            byte b = brightness + (byte)((255 - brightness) * e / 7);
-            FastLED.setBrightness(b);
-            FastLED.show();
-            delay(60);
-        }
-        FastLED.setBrightness(brightness);
+    // Fade back to normal brightness over 8 steps
+    for (int e = 7; e >= 0; e--) {
+        byte b = brightness + (byte)((255 - brightness) * e / 7);
+        FastLED.setBrightness(b);
+        FastLED.show();
+        delay(60);
     }
-    showSimple(on, off);
+    FastLED.setBrightness(brightness);
 }
 
 /**
@@ -638,9 +597,9 @@ void handleBluetooth() {
                 break;
             }
             case 'E':
-                effect = btSerial.read();
+                ambientEffect = btSerial.read();
+                transitionEffect = btSerial.read();
                 showEsIst = (btSerial.read() == 1);
-                btSerial.read();
                 break;
             case 'T': {  //time
                 byte h = btSerial.read();
@@ -702,9 +661,9 @@ void handleBluetooth() {
                         break;
                     case 'E':
                         btSerial.write('E');
-                        btSerial.write(effect);
+                        btSerial.write(ambientEffect);
+                        btSerial.write(transitionEffect);
                         btSerial.write(showEsIst);
-                        btSerial.write('E');
                         break;
                     case 'T':
                         btSerial.write('T');

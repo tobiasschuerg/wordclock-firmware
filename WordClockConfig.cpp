@@ -21,7 +21,8 @@ const byte HOUR[][3] = {
 CRGB foreground = CRGB(0, 100, 100);
 CRGB background = CRGB(5, 5, 5);
 
-byte effect = 3;
+byte ambientEffect = 1;      // Matrix
+byte transitionEffect = 1;   // Fade
 byte hwVersion = 2;
 bool showEsIst = false;
 

@@ -19,7 +19,8 @@ extern const byte HOUR[][3];
 extern CRGB foreground;
 extern CRGB background;
 
-extern byte effect;
+extern byte ambientEffect;
+extern byte transitionEffect;
 /**
   Hardware version.
 */

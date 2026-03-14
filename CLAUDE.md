@@ -36,27 +36,36 @@ Built-in libraries used: Wire, SoftwareSerial, EEPROM.
 
 ## Architecture
 
-**Wordclock.ino** — Main sketch with `setup()`/`loop()`. Contains all display logic: word generation from current time, 14 visual effects, night mode handling, Bluetooth command processing, and LED rendering via FastLED.
+**Wordclock.ino** — Main sketch with `setup()`/`loop()`. Contains all display logic: word generation from current time, ambient and transition effects (independently configurable), night mode handling, Bluetooth command processing, and LED rendering via FastLED.
 
-### Effects (IDs 0-14)
+### Effects
 
-| ID | Name | Type | Description |
-|----|------|------|-------------|
-| 0 | Simple | Static | No animation, immediate word display |
-| 1 | Fade | Transition | Words crossfade in/out (~1.6s) |
-| 2 | Typewriter | Transition | Characters appear/disappear sequentially |
-| 3 | Matrix | Ambient | Digital rain background (default) |
-| 4 | RollDown | Transition | Words vertically scroll in/out with easing |
-| 5 | Party | Ambient | Random rainbow noise background |
-| 6 | Scanner | Debug | LED-by-LED scan for calibration |
-| 7 | Wave | Transition | Circular ripple reveals new words from center |
-| 8 | Slide | Transition | Old words slide left, new words slide in from right |
-| 9 | Breathing | Ambient | Sine-wave brightness pulsing |
-| 10 | Rainbow | Ambient | Text color cycles through HSV hue wheel |
-| 11 | Fire | Ambient | Warm flickering candle-light background |
-| 12 | Twinkle | Ambient | Random background LEDs sparkle |
-| 13 | Snow | Ambient | White pixels fall down columns at varying speeds |
-| 14 | Pulse | Transition | Words flash bright on change, then settle |
+Ambient and transition effects are independently configurable. Ambient effects run every frame (background animation), transition effects play once when displayed words change.
+
+**Ambient Effects (IDs 0-7):**
+
+| ID | Name | Description |
+|----|------|-------------|
+| 0 | None | Solid background color, no animation |
+| 1 | Matrix | Digital rain in background color (default) |
+| 2 | Party | Random rainbow noise |
+| 3 | Breathing | Sine-wave brightness pulsing |
+| 4 | Rainbow | Text color cycles through HSV hue wheel |
+| 5 | Fire | Warm flickering candle-light |
+| 6 | Twinkle | Random background LEDs sparkle |
+| 7 | Snow | White pixels fall down columns |
+
+**Transition Effects (IDs 0-6):**
+
+| ID | Name | Description |
+|----|------|-------------|
+| 0 | None | Instant word change (default: Fade) |
+| 1 | Fade | Words crossfade in/out (~1.6s) |
+| 2 | Typewriter | Characters appear/disappear sequentially |
+| 3 | RollDown | Words vertically scroll in/out with easing |
+| 4 | Wave | Circular ripple reveals new words from center |
+| 5 | Slide | Old words slide left, new words slide in from right |
+| 6 | Pulse | Words flash bright on change, then settle |
 
 **WordClockConfig.h/.cpp** — German word definitions as LED position arrays `[row, col, length]`, global state variables (colors, brightness, effect selection, night mode params), and default values.
 
@@ -70,7 +79,7 @@ Built-in libraries used: Wire, SoftwareSerial, EEPROM.
 
 ## Bluetooth Protocol
 
-Single-character commands followed by 3 data bytes: `F` (foreground RGB), `B` (background RGB), `E` (effect + showEsIst), `T` (time h/m/s), `D` (date d/m/y), `G` (query), `S` (save to EEPROM).
+Single-character commands followed by 3 data bytes: `F` (foreground RGB), `B` (background RGB), `E` (ambientEffect, transitionEffect, showEsIst), `T` (time h/m/s), `D` (date d/m/y), `G` (query), `S` (save to EEPROM).
 
 ## Key Details
 
